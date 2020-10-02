@@ -2,13 +2,16 @@ import React, { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import Autocomplete from './shared/components/Autocomplete';
 import Cities, { City } from './shared/components/Citites';
-import { Alert } from 'react-bootstrap';
+import { Alert, Col, Container } from 'react-bootstrap';
 import { useAsynchronousTimeout } from './shared/hooks/useAsynchronousTimeout';
 import { getCityGroupWeather, getSingleCityWeather } from './shared/api/openWeather';
 import { getItemFromLS, setToLS } from './shared/services/localStorage';
 
 const CITIES_LIST_KEY = 'cities_list_key';
 const WEATHER_DATA_KEY = 'weather_data_key';
+
+// @ts-ignore
+const dataReloadDelay: number = process.env.REACT_APP_DATA_RELOAD_DELAY;
 
 const getNames = (arr: Array<City>) => arr.map(item => item.name);
 
@@ -31,6 +34,10 @@ function App() {
   }, []);
 
   useAsynchronousTimeout(async () => {
+    if (!cities.length) {
+      return;
+    }
+
     try {
       const citiesShape = cities.reduce((acc, { id, name }) => ({ ...acc, [id]: name }), {});
       const response = await getCityGroupWeather(Object.keys(citiesShape));
@@ -45,13 +52,13 @@ function App() {
     } catch (e) {
       setAlertMessage(e.toString());
     }
-  }, 165000, [cities, updateCitiesData]);
+  }, dataReloadDelay, [cities, updateCitiesData]);
 
   useEffect(() => {
-    const citiesList = getItemFromLS(CITIES_LIST_KEY);
+    const citiesList = getItemFromLS(CITIES_LIST_KEY, []);
 
     if (!cities.length && citiesList.length) {
-      const weatherData = getItemFromLS(WEATHER_DATA_KEY);
+      const weatherData = getItemFromLS(WEATHER_DATA_KEY, {});
       setCities(Object.values(weatherData));
     }
   }, [cities.length]);
@@ -87,22 +94,22 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Autocomplete onSelect={addNewCity}/>
-      <Alert show={!!alertMessage} variant="danger">
-        <p>
+    <Container>
+      <Col>
+        <Autocomplete onSelect={addNewCity}/>
+        <Alert show={!!alertMessage} variant="danger">
           {alertMessage}
-        </p>
-      </Alert>
-      <div>
+        </Alert>
+      </Col>
+      <Col>
         <div>
           Selected cities:
         </div>
         <div>
           <Cities cities={cities} handleRemoveCity={handleRemoveCity}/>
         </div>
-      </div>
-    </div>
+      </Col>
+    </Container>
   );
 }
 

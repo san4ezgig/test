@@ -1,69 +1,14 @@
-import React, { FunctionComponent, useEffect, useState } from 'react';
+import React, { FunctionComponent } from 'react';
 import PropTypes from 'prop-types';
-import { Card, CardColumns, Container, Row } from 'react-bootstrap';
+import { Card, CardColumns, Container } from 'react-bootstrap';
 import { ReactComponent as CloseIcon } from './close.svg';
 import './style.css';
-
-const getCitiesWithMinAndMaxTemp = (cities: Array<City>) => {
-  const { name, main: { temp } } = cities[0];
-  const newRecords = cities.reduce((acc, city) => {
-    const { name: currName, main: { temp: currTemp } } = city;
-    if (acc.maxTemp.temp < currTemp) {
-      acc.maxTemp = {
-        name: currName,
-        temp: currTemp,
-      };
-    }
-
-    if (acc.minTemp.temp > currTemp) {
-      acc.minTemp = {
-        name: currName,
-        temp: currTemp,
-      };
-    }
-
-    return acc;
-  }, {
-    maxTemp: {
-      name,
-      temp,
-    },
-    minTemp: {
-      name,
-      temp,
-    }
-  });
-
-  return {
-    maxTempCity: newRecords?.maxTemp?.name,
-    minTempCity: newRecords?.minTemp?.name,
-  };
-};
+import Records from './Records';
 
 const Cities: FunctionComponent<ICities> = ({ cities, handleRemoveCity }) => {
-  const [records, setRecords] = useState<{
-    maxTempCity: string,
-    minTempCity: string,
-  } | null>(null);
-
-  useEffect(() => {
-    if (cities.length) {
-      setRecords(getCitiesWithMinAndMaxTemp(cities));
-    }
-  }, [cities]);
-
   return (
     <Container>
-      {records && (
-        <>
-          <Row>
-            City with maximum temperature - {records.maxTempCity}
-          </Row>
-          <Row>
-            City with minimum temperature - {records.minTempCity}
-          </Row>
-        </>
-      )}
+      <Records cities={cities} />
       <CardColumns>
         {cities.map((city) => {
           const {
